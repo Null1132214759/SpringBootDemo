@@ -1,11 +1,22 @@
 package com.edu.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CachingConfigurerSupport;
+import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.lang.reflect.Method;
+import java.time.Duration;
 
 /**
  * 一、搭建基本环境
@@ -40,37 +51,69 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  *      4）、自定义CacheManager；
  *
  */
-// 定制Redis序列化器
 @Configuration
-public class MyRedisConfig {
+public class MyRedisConfig extends CachingConfigurerSupport {
+    private static final Logger logger = LoggerFactory.getLogger(MyRedisConfig.class);
 
-    @Bean(name = "springSessionDefaultRedisSerializer")
-    public GenericJackson2JsonRedisSerializer getGenericJackson2JsonRedisSerializer() {
-        return new GenericJackson2JsonRedisSerializer();
+    private Duration timeToLive = Duration.ofDays(7);
+
+    public void setTimeToLive(Duration timeToLive) {
+        this.timeToLive = timeToLive;
     }
+
     @Bean
-    public RedisTemplate<String, Object> getRedisTemplate(
-            RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<String, Object>();
-        redisTemplate.setConnectionFactory(connectionFactory);
-        redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
-        redisTemplate.setValueSerializer(getGenericJackson2JsonRedisSerializer());
-        redisTemplate.setHashKeySerializer(getGenericJackson2JsonRedisSerializer());
-        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-        redisTemplate.setKeySerializer(stringRedisSerializer);
-        redisTemplate.setHashKeySerializer(stringRedisSerializer);
+    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(this.timeToLive)
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(keySerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(valueSerializer()))
+                .disableCachingNullValues();
+
+        RedisCacheManager redisCacheManager = RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(config)
+                .transactionAware()
+                .build();
+
+        logger.debug("自定义RedisCacheManager加载完成");
+        return redisCacheManager;
+    }
+
+    @Bean(name = "redisTemplate")
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        redisTemplate.setKeySerializer(keySerializer());
+        redisTemplate.setHashKeySerializer(keySerializer());
+        redisTemplate.setValueSerializer(valueSerializer());
+        redisTemplate.setHashValueSerializer(valueSerializer());
+        logger.debug("自定义RedisTemplate加载完成");
         return redisTemplate;
     }
+
+    private RedisSerializer<String> keySerializer() {
+        return new StringRedisSerializer();
+    }
+
+    private RedisSerializer<Object> valueSerializer() {
+        return new GenericJackson2JsonRedisSerializer();
+    }
+
+    @Override
+    public KeyGenerator keyGenerator() {
+        return new KeyGenerator() {
+            @Override
+            public Object generate(Object target, Method method, Object... params) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(target.getClass().getName());
+                sb.append(method.getName());
+                for (Object obj : params) {
+                    sb.append(obj.toString());
+                }
+                return sb.toString();
+            }
+        };
+    }
 }
-
-
-/**
- * 存在问题：
- * 由于spring-data-redis版本已更新到2.0+ ，template原单参数一移除
- * 现 Object 序列化之后只能以二进制方式存放入redis
- * 无法将其转化为JSON字符串
- */
- 
    
 
   

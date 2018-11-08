@@ -58,6 +58,11 @@ public class MySecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().disable();
     }
 
+    /**
+     * 开启密码加密校验
+     * @param auth
+     * @throws Exception
+     */
     @Autowired
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(customUserService()).passwordEncoder(new BCryptPasswordEncoder());
@@ -98,8 +103,7 @@ public class MySecurityConfig extends WebSecurityConfigurerAdapter {
      * @param args
      */
     public static void main(String[] args) { 
-        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(); 
-        //加密"0" 
+        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
         String encode = bCryptPasswordEncoder.encode("123456"); 
         System.out.println(encode); 
     }

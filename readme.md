@@ -4,9 +4,7 @@ SpringBoot 整合 Demo
 
 开始一直没改明白如何做登录校验，跟Shiro还是有点差别！）
 
-整合Redis作为缓存服务器（还有大坑啊！SpringBoot2.X更新后关于redis的源代码实现都改了
-
-一直无法对象实体序列化为JSON字符串，后续再解决！）
+整合Redis作为缓存服务器（缓存数据为JSON字符串）
 
 整合DruidDataSource数据源
 

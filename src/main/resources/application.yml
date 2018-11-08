@@ -2,7 +2,7 @@ spring:
   datasource:
 #   数据源基本配置（使用druid数据源）
     username: root
-    password: ***
+    password: ******
     driver-class-name: com.mysql.jdbc.Driver
     url: jdbc:mysql://123.206.180.67:3306/crud
     type: com.alibaba.druid.pool.DruidDataSource
