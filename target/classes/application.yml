@@ -4,7 +4,7 @@ spring:
     username: root
     password: root
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/crud
+    url: jdbc:mysql://123.206.180.67:3306/crud
     type: com.alibaba.druid.pool.DruidDataSource
     
 #   数据源其他配置

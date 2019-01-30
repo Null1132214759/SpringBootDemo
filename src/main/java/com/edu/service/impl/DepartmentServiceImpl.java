@@ -3,6 +3,8 @@ package com.edu.service.impl;
 import com.edu.dao.DepartmentMapper;
 import com.edu.entity.Department;
 import com.edu.service.DepartmentService;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,5 +41,16 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public void update(Department department) {
         departmentMapper.updateByPrimaryKeySelective(department);
+    }
+    
+    @RabbitListener(queues = "atguigu.news")
+    public void receive(Department department) {
+        System.out.println("收到消息：" + department);
+    }
+    
+    @RabbitListener(queues = "atguigu")
+    public void receive2(Message message) {
+        System.out.println(message.getBody());
+        System.out.println(message.getMessageProperties());
     }
 }
