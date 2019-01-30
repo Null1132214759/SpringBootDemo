@@ -13,3 +13,5 @@ SpringBoot 整合 Demo
 整合Thymeleaf模板引擎
 
 实现全局异常消息处理
+
+整合RabbitMQ 测试消息队列
